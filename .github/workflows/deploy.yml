@@ -37,6 +37,18 @@ jobs:
           ref: main
           path: sources/training
 
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: portal/site/package-lock.json
+
+      - name: Build landing page
+        run: |
+          npm ci --prefix portal/site
+          npm run build --prefix portal/site
+
       - name: Assemble website
         run: |
           mkdir -p public
@@ -45,7 +57,7 @@ jobs:
           rsync -a \
             --exclude='.git' \
             --exclude='.github' \
-            portal/site/ public/
+            portal/site/dist/ public/
 
           rsync -a \
             --exclude='.git' \
