@@ -142,7 +142,7 @@ h1, h2, h3 {
 
 .site-footer { padding-block: 3rem; color: rgba(255,255,255,.65); background: #10213e; border-block-start: 1px solid rgba(255,255,255,.08); }
 .footer-grid { display: grid; gap: 2rem; }
-.footer-brand img { inline-size: 10.5rem; margin-block-end: .8rem; }
+.footer-brand img { inline-size: 10.5rem; margin-block-end: .8rem; padding: .4rem .55rem; background: var(--white); border-radius: .5rem; }
 .footer-brand p, .copyright { margin: 0; font-size: .75rem; }
 .footer-links { display: flex; flex-wrap: wrap; gap: .6rem 1.35rem; font-size: .8rem; font-weight: 600; }
 .footer-links a { min-block-size: 2.75rem; display: inline-flex; align-items: center; }
