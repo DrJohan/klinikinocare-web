@@ -12,14 +12,13 @@ import clinicBackgroundTwo from '../assets/clinic-background-2.png';
 import clinicBackgroundThree from '../assets/clinic-background-3.png';
 import clinicHero from '../assets/clinic-hero.png';
 import logoDefault from '../assets/logo-default.jpg';
+import presentationRegistry from '../presentations.json';
 
 const HERO_IMAGE = clinicBackgroundThree;
 const SECTION2_IMAGE = clinicBackgroundOne;
 const SECTION3_IMG1 = clinicBackgroundTwo;
 const SECTION3_IMG2 = clinicHero;
 const SECTION3_BG = clinicBackgroundThree;
-
-const featureBars = ['Specialised Wound Care', 'Knee Treatment', 'Hair Treatment'];
 
 const services = [
   { name: 'Wound\nCare', num: '01', active: true },
@@ -35,6 +34,24 @@ const mobileNavLinks = [
   { label: 'Assessment', href: '#assessment' },
   { label: 'Clinic Website', href: 'https://klinikinocare.com/' },
 ];
+
+type TrainingPresentation = {
+  id: string;
+  title: string;
+  description: string;
+  repository: string;
+  branch: string;
+  path: string;
+  sourceDir: string;
+  enabled?: boolean;
+};
+
+const trainingPresentations = (presentationRegistry.presentations as TrainingPresentation[])
+  .filter((presentation) => presentation.enabled !== false)
+  .map((presentation) => ({
+    ...presentation,
+    href: `/${presentation.path.replace(/^\/+|\/+$/g, '')}/`,
+  }));
 
 type MaskPosition = {
   x: number;
@@ -268,11 +285,19 @@ function SplashScreen({ onComplete }: { onComplete: () => void }) {
 
 function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [trainingOpen, setTrainingOpen] = useState(false);
   const triggerRef = useRef<HTMLButtonElement | null>(null);
+  const trainingTriggerRef = useRef<HTMLButtonElement | null>(null);
+  const trainingMenuRef = useRef<HTMLDivElement | null>(null);
 
   const closeMenu = useCallback((restoreFocus = false) => {
     setMenuOpen(false);
     if (restoreFocus) triggerRef.current?.focus();
+  }, []);
+
+  const closeTraining = useCallback((restoreFocus = false) => {
+    setTrainingOpen(false);
+    if (restoreFocus) trainingTriggerRef.current?.focus();
   }, []);
 
   useEffect(() => {
@@ -288,19 +313,32 @@ function Navbar() {
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape' && menuOpen) closeMenu(true);
+      if (event.key === 'Escape' && trainingOpen) closeTraining(true);
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [closeMenu, menuOpen]);
+  }, [closeMenu, closeTraining, menuOpen, trainingOpen]);
+
+  useEffect(() => {
+    if (!trainingOpen) return;
+
+    const onPointerDown = (event: PointerEvent) => {
+      if (!trainingMenuRef.current?.contains(event.target as Node)) closeTraining();
+    };
+
+    window.addEventListener('pointerdown', onPointerDown);
+    return () => window.removeEventListener('pointerdown', onPointerDown);
+  }, [closeTraining, trainingOpen]);
 
   useEffect(() => {
     const query = window.matchMedia('(min-width: 768px)');
     const onChange = (event: MediaQueryListEvent) => {
       if (event.matches) closeMenu();
+      else closeTraining();
     };
     query.addEventListener('change', onChange);
     return () => query.removeEventListener('change', onChange);
-  }, [closeMenu]);
+  }, [closeMenu, closeTraining]);
 
   return (
     <>
@@ -314,19 +352,65 @@ function Navbar() {
             width="2560"
             height="654"
             alt="Klinik Inocare"
-            className="h-auto w-40 md:w-52"
+            className="h-auto w-40 md:w-44 lg:w-52"
           />
         </a>
 
-        <div className="hidden items-center gap-4 md:flex">
+        <div className="hidden items-center gap-3 md:flex lg:gap-4">
           <button
             type="button"
-            className="rounded-full border border-[#234173] bg-white px-6 py-3 text-sm font-semibold text-[#234173] transition-colors duration-200 hover:bg-[#234173] hover:text-white"
+            className="rounded-full border border-[#234173] bg-white px-5 py-3 text-xs font-semibold text-[#234173] transition-colors duration-200 hover:bg-[#234173] hover:text-white lg:px-6 lg:text-sm"
             onClick={() => document.getElementById('treatments')?.scrollIntoView({ behavior: 'smooth' })}
           >
             Menu
           </button>
-          <a href="https://klinikinocare.com/" className="text-sm font-semibold text-[#234173]">
+          <div ref={trainingMenuRef} className="relative">
+            <button
+              ref={trainingTriggerRef}
+              type="button"
+              className="flex min-h-11 items-center gap-1 text-xs font-semibold text-[#234173] transition-colors hover:text-[#538AC3] lg:text-sm"
+              aria-expanded={trainingOpen}
+              aria-controls="desktop-training-menu"
+              onClick={() => setTrainingOpen((open) => !open)}
+            >
+              Training
+              <svg
+                width="12"
+                height="12"
+                viewBox="0 0 12 12"
+                fill="none"
+                className={`transition-transform duration-200 ${trainingOpen ? 'rotate-180' : ''}`}
+                aria-hidden="true"
+              >
+                <path d="m2.5 4.5 3.5 3 3.5-3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </button>
+
+            <div
+              id="desktop-training-menu"
+              className={`absolute right-0 top-full mt-2 max-h-[70vh] w-72 overflow-y-auto rounded-2xl border border-[#DCEAF7] bg-white p-2 shadow-2xl transition-all duration-200 ${
+                trainingOpen
+                  ? 'visible translate-y-0 opacity-100'
+                  : 'invisible -translate-y-2 opacity-0'
+              }`}
+            >
+              <p className="px-3 pb-2 pt-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-[#64748B]">
+                Training presentations
+              </p>
+              {trainingPresentations.map((presentation) => (
+                <a
+                  key={presentation.id}
+                  href={presentation.href}
+                  className="block rounded-xl px-3 py-3 transition-colors hover:bg-[#F7F9FC] focus:bg-[#F7F9FC]"
+                  onClick={() => closeTraining()}
+                >
+                  <span className="block text-sm font-bold text-[#234173]">{presentation.title}</span>
+                  <span className="mt-1 block text-xs leading-4 text-[#64748B]">{presentation.description}</span>
+                </a>
+              ))}
+            </div>
+          </div>
+          <a href="https://klinikinocare.com/" className="text-xs font-semibold text-[#234173] lg:text-sm">
             Book Assessment
           </a>
         </div>
@@ -384,7 +468,7 @@ function Navbar() {
               <a
                 key={link.label}
                 href={link.href}
-                className={`text-4xl font-bold text-[#234173] transition-all duration-500 ease-[cubic-bezier(0.76,0,0.24,1)] hover:text-[#538AC3] ${
+                className={`text-3xl font-bold text-[#234173] transition-all duration-500 ease-[cubic-bezier(0.76,0,0.24,1)] hover:text-[#538AC3] sm:text-4xl ${
                   menuOpen ? 'translate-x-0 opacity-100' : 'translate-x-8 opacity-0'
                 }`}
                 style={{ transitionDelay: menuOpen ? `${100 + index * 60}ms` : '0ms' }}
@@ -401,14 +485,21 @@ function Navbar() {
               }`}
               style={{ transitionDelay: menuOpen ? '450ms' : '0ms' }}
             >
-              <p className="mb-4 text-sm font-semibold text-[#234173]">Wound • Knee • Hair</p>
-              <a
-                href="https://klinikinocare.com/"
-                className="block w-full rounded-full bg-[#234173] px-6 py-4 text-center text-sm font-semibold text-white transition-colors duration-200 hover:bg-[#152C53]"
-                tabIndex={menuOpen ? 0 : -1}
-              >
-                Visit Klinik Inocare
-              </a>
+              <p className="mb-3 text-sm font-semibold text-[#234173]">Training</p>
+              <div className="max-h-48 space-y-1 overflow-y-auto pr-1">
+                {trainingPresentations.map((presentation) => (
+                  <a
+                    key={presentation.id}
+                    href={presentation.href}
+                    className="flex min-h-11 items-center justify-between gap-3 rounded-xl bg-[#F7F9FC] px-4 py-3 text-sm font-semibold text-[#234173] transition-colors hover:bg-[#DCEAF7]"
+                    tabIndex={menuOpen ? 0 : -1}
+                    onClick={() => closeMenu()}
+                  >
+                    <span>{presentation.title}</span>
+                    <span aria-hidden="true">↗</span>
+                  </a>
+                ))}
+              </div>
             </div>
           </div>
         </aside>
@@ -446,7 +537,7 @@ export default function App() {
   const section1Cards = useRef<Array<HTMLDivElement | null>>([]);
   const section1Positions = useMaskPositions(section1Ref, section1Cards);
   const section1ImageWidth = useImageWidth(HERO_IMAGE, section1Ref);
-  const s1Reveal = useStaggeredReveal(4);
+  const s1Reveal = useStaggeredReveal(1);
 
   const section2Ref = useRef<HTMLElement | null>(null);
   const section2Cards = useRef<Array<HTMLDivElement | null>>([]);
@@ -487,35 +578,16 @@ export default function App() {
         className="flex h-screen w-full flex-col gap-1.5 overflow-hidden px-3 pb-1.5 pt-24 md:gap-2 md:px-5 md:pb-2 md:pt-24"
         aria-labelledby="hero-title"
       >
-        {featureBars.map((feature, index) => (
-          <MaskedCard
-            key={feature}
-            bgImage={HERO_IMAGE}
-            position={section1Positions[index] ?? EMPTY_POSITION}
-            imageWidth={section1ImageWidth}
-            focalX={section1FocalX}
-            cardRef={(element) => {
-              section1Cards.current[index] = element;
-            }}
-            className="relative h-14 w-full shrink-0 overflow-hidden rounded-xl md:h-20 md:rounded-2xl"
-            style={s1Reveal.getAnimStyle(index)}
-          >
-            <span className="relative z-10 flex h-full items-center justify-center text-center text-lg font-bold text-[#234173] md:text-3xl">
-              {feature}
-            </span>
-          </MaskedCard>
-        ))}
-
         <MaskedCard
           bgImage={HERO_IMAGE}
-          position={section1Positions[3] ?? EMPTY_POSITION}
+          position={section1Positions[0] ?? EMPTY_POSITION}
           imageWidth={section1ImageWidth}
           focalX={section1FocalX}
           cardRef={(element) => {
-            section1Cards.current[3] = element;
+            section1Cards.current[0] = element;
           }}
           className="relative min-h-0 w-full flex-1 overflow-hidden rounded-xl md:rounded-2xl"
-          style={s1Reveal.getAnimStyle(3)}
+          style={s1Reveal.getAnimStyle(0)}
         >
           <p className="absolute left-4 top-4 z-10 max-w-[220px] text-xs font-semibold leading-4 text-[#1E293B] md:left-7 md:top-7 md:max-w-[330px] md:text-sm md:leading-5">
             Focused care for wounds, knee concerns

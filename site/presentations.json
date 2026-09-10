@@ -1,0 +1,14 @@
+{
+  "presentations": [
+    {
+      "id": "bioprotein-training",
+      "title": "Bioprotein Training",
+      "description": "Advanced wound management reveal presentation",
+      "repository": "DrJohan/bioprotein_training",
+      "branch": "main",
+      "path": "training",
+      "sourceDir": ".",
+      "enabled": true
+    }
+  ]
+}

@@ -30,12 +30,41 @@ jobs:
         with:
           path: portal
 
-      - name: Checkout Bioprotein training
-        uses: actions/checkout@v6
-        with:
-          repository: DrJohan/bioprotein_training
-          ref: main
-          path: sources/training
+      - name: Checkout presentation repositories
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p sources/presentations
+
+          duplicate_ids=$(jq -r '[.presentations[] | select(.enabled != false) | .id] | group_by(.) | map(select(length > 1) | .[0]) | join(", ")' portal/site/presentations.json)
+          duplicate_paths=$(jq -r '[.presentations[] | select(.enabled != false) | .path] | group_by(.) | map(select(length > 1) | .[0]) | join(", ")' portal/site/presentations.json)
+          if [[ -n "$duplicate_ids" || -n "$duplicate_paths" ]]; then
+            [[ -z "$duplicate_ids" ]] || echo "Duplicate presentation ids: $duplicate_ids" >&2
+            [[ -z "$duplicate_paths" ]] || echo "Duplicate presentation paths: $duplicate_paths" >&2
+            exit 1
+          fi
+
+          jq -c '.presentations[] | select(.enabled != false)' portal/site/presentations.json | while IFS= read -r presentation; do
+            id=$(jq -r '.id' <<<"$presentation")
+            repository=$(jq -r '.repository' <<<"$presentation")
+            branch=$(jq -r '.branch // "main"' <<<"$presentation")
+            destination=$(jq -r '.path' <<<"$presentation")
+            source_dir=$(jq -r '.sourceDir // "."' <<<"$presentation")
+
+            [[ "$id" =~ ^[a-z0-9][a-z0-9-]*$ ]] || { echo "Invalid presentation id: $id" >&2; exit 1; }
+            [[ "$repository" =~ ^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$ ]] || { echo "Invalid repository: $repository" >&2; exit 1; }
+            [[ "$branch" =~ ^[A-Za-z0-9][A-Za-z0-9._/-]*$ && "$branch" != *".."* ]] || { echo "Invalid branch: $branch" >&2; exit 1; }
+            [[ "$destination" =~ ^training(/[a-z0-9][a-z0-9-]*)*$ ]] || { echo "Invalid presentation path: $destination" >&2; exit 1; }
+            [[ "$source_dir" == "." || "$source_dir" =~ ^[A-Za-z0-9_.-]+(/[A-Za-z0-9_.-]+)*$ ]] || { echo "Invalid source directory: $source_dir" >&2; exit 1; }
+            [[ "$source_dir" != *".."* ]] || { echo "Invalid source directory: $source_dir" >&2; exit 1; }
+
+            git clone --depth 1 --branch "$branch" "https://github.com/${repository}.git" "sources/presentations/${id}"
+
+            if [[ ! -d "sources/presentations/${id}/${source_dir}" ]]; then
+              echo "Source directory not found for $id: $source_dir" >&2
+              exit 1
+            fi
+          done
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -50,19 +79,27 @@ jobs:
           npm run build --prefix portal/site
 
       - name: Assemble website
+        shell: bash
         run: |
+          set -euo pipefail
           mkdir -p public
-          mkdir -p public/training
 
           rsync -a \
             --exclude='.git' \
             --exclude='.github' \
             portal/site/dist/ public/
 
-          rsync -a \
-            --exclude='.git' \
-            --exclude='.github' \
-            sources/training/ public/training/
+          jq -c '.presentations[] | select(.enabled != false)' portal/site/presentations.json | while IFS= read -r presentation; do
+            id=$(jq -r '.id' <<<"$presentation")
+            destination=$(jq -r '.path' <<<"$presentation")
+            source_dir=$(jq -r '.sourceDir // "."' <<<"$presentation")
+
+            mkdir -p "public/${destination}"
+            rsync -a \
+              --exclude='.git' \
+              --exclude='.github' \
+              "sources/presentations/${id}/${source_dir}/" "public/${destination}/"
+          done
 
           touch public/.nojekyll
 
