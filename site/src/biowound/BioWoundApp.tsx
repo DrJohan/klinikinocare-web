@@ -16,6 +16,7 @@ import clinician640Avif from '../../assets/clinical-support-640.avif';
 import clinician1024Avif from '../../assets/clinical-support-1024.avif';
 import clinician640Webp from '../../assets/clinical-support-640.webp';
 import clinician1024Webp from '../../assets/clinical-support-1024.webp';
+import WhatsAppIcon from '../components/WhatsAppIcon';
 import { bioWoundContent, clinic, type BioWoundLocale } from './content';
 import {
   CONSENT_KEY,
@@ -46,15 +47,6 @@ function Arrow({ direction = 'right' }: { direction?: 'right' | 'down' }) {
   return (
     <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={direction === 'down' ? 'rotate-90' : ''}>
       <path d="M5 12h14M13 6l6 6-6 6" />
-    </svg>
-  );
-}
-
-function WhatsAppIcon() {
-  return (
-    <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M20.5 11.7a8.5 8.5 0 0 1-12.6 7.5L3 20.5l1.3-4.7a8.5 8.5 0 1 1 16.2-4.1Z" />
-      <path d="M8.4 8.1c.2-.4.4-.4.7-.4h.4c.1 0 .3 0 .4.4l.7 1.6c.1.3.1.5-.1.7l-.6.7c-.2.2-.1.4 0 .6.7 1.2 1.6 2.1 2.8 2.7.2.1.4.1.6-.1l.8-1c.2-.2.4-.3.7-.2l1.6.8c.3.1.4.3.4.5 0 .3-.2 1.4-1 1.9-.6.5-1.5.8-2.4.6-1-.2-2.3-.7-3.9-2.1-1.8-1.6-2.9-3.6-3.2-4.7-.3-1 .1-1.6.5-2Z" />
     </svg>
   );
 }
