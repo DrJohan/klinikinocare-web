@@ -74,6 +74,8 @@ jobs:
           cache-dependency-path: portal/site/package-lock.json
 
       - name: Build landing page
+        env:
+          VITE_GA_MEASUREMENT_ID: G-ZB2785554Z
         run: |
           npm ci --prefix portal/site
           npm run build --prefix portal/site
@@ -88,6 +90,11 @@ jobs:
             --exclude='.git' \
             --exclude='.github' \
             portal/site/dist/ public/
+
+          # Stable public paths for social metadata and the compact favicon.
+          mkdir -p public/assets
+          cp portal/site/assets/logo-default.jpg public/assets/logo-default.jpg
+          cp portal/site/assets/logo-mark-default.jpg public/assets/logo-mark-default.jpg
 
           jq -c '.presentations[] | select(.enabled != false)' portal/site/presentations.json | while IFS= read -r presentation; do
             id=$(jq -r '.id' <<<"$presentation")
