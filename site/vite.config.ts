@@ -9,6 +9,7 @@ export default defineConfig({
         main: 'index.html',
         en: 'en/index.html',
         ms: 'ms/index.html',
+        biowound: 'biowound/index.html',
       },
     },
   },
