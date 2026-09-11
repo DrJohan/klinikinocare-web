@@ -94,6 +94,7 @@ jobs:
           # Stable public paths for social metadata and the compact favicon.
           mkdir -p public/assets
           cp portal/site/assets/logo-default.jpg public/assets/logo-default.jpg
+          cp portal/site/assets/logo-default-transparent.png public/assets/logo-default.png
           cp portal/site/assets/logo-mark-default.jpg public/assets/logo-mark-default.jpg
 
           jq -c '.presentations[] | select(.enabled != false)' portal/site/presentations.json | while IFS= read -r presentation; do
